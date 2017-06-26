@@ -1,0 +1,30 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+		"location": {
+			"value": "southcentralus"
+			},
+		"vmNamePrefix": {
+			"value": "az12web"
+			},
+		"vmSize": {
+			"value": "Standard_DS1_v2"
+			},
+		"loadBalancerName": {
+			"value": "LB-Main-A"
+			},
+		"mainLBPublicIPAddressesName": {
+			"value": "LB-Main-A-IP"
+			},
+		"adminUsername": {
+			"value": "vmAdmin"
+			},
+		"vmAvailabilitySetName": {
+			"value": "availSetProdA"
+			},
+		"subnetName": {
+			"value": "default"
+			}
+	}
+}

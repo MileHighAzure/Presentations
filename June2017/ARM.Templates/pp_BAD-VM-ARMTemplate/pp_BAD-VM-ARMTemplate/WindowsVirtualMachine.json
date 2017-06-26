@@ -1,0 +1,513 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password"
+      }
+    },
+    "vmNamePrefix": {
+      "type": "string",
+      "defaultValue": "az12web",
+      "metadata": {
+        "description": "Prefix to use for VM names"
+      }
+    },
+    "loadBalancerName": {
+      "defaultValue": "LB-Main-A",
+      "type": "string",
+      "metadata": {
+        "description": "This is the name of the load balancer"
+      }
+    },
+    "mainLBPublicIPAddressesName": {
+      "defaultValue": "LB-Main-A-IP",
+      "type": "string"
+    },
+    "subnetName": {
+      "type": "string",
+      "defaultValue": "default"
+    },
+    "vmAvailabilitySetName": {
+      "type": "string",
+      "defaultValue": "availSetProdA"
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS1_v2",
+      "metadata": {
+        "description": "This is the allowed list of VM sizes"
+      }
+    }
+  },
+	"variables": {
+		"comments": "This template will create four instances (01 thru 02). At time of this writing, using a looping mechanism with Managed Disk/Availability Set doesn't work via an ARM template.",
+		"subscriptionBaseString": "[concat('/Subscriptions/', subscription().subscriptionId)]",
+		"virtualNetworkName": "vmvnet",
+		"diskRedundantStorageType": "Standard_LRS",
+		"diskPricingTier": "Standard",
+		"vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+		"subnetRef": "[concat(variables('subscriptionBaseString'), '/resourceGroups/RG-SC-Demo/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', parameters('subnetName') )]",
+		"vmResourceNamePrefix": "vm-prod",
+		"prodVMDiagnosticsStorageAccountName": "sascpp2antwkdiag",
+		"networkSecurityGroupName": "[concat(variables('vmResourceNamePrefix'), '-nsg')]",
+		"networkInterfaceNameSuffix": "nic01",
+		"DiskNameSuffix": "dsk",
+		"vm01Name": "[concat(parameters('vmNamePrefix'), '01')]",
+		"vm01DiskName": "[concat(variables('vm01Name'), variables('DiskNameSuffix'), '1')]",
+		"vm01dataDiskName": "[concat(variables('vm01Name'), variables('DiskNameSuffix'), '2')]",
+		"vm01NICName": "[concat(variables('vm01Name'), variables('networkInterfaceNameSuffix'))]",
+		"vm02Name": "[concat(parameters('vmNamePrefix'), '02')]",
+		"vm02DiskName": "[concat(variables('vm02Name'), variables('DiskNameSuffix'), '1')]",
+		"vm02dataDiskName": "[concat(variables('vm02Name'), variables('DiskNameSuffix'), '2')]",
+		"vm02NICName": "[concat(variables('vm02Name'), variables('networkInterfaceNameSuffix'))]",
+		"dnsServer1": "10.1.0.1",
+		"lbBackendAddressPoolName": "LBProdPool",
+		"lbProbeName": "lbprodprobe",
+		"lbProbeSslName": "lbprodprobe_ssl",
+		"lbFrontEndName": "LoadBalancerFrontEnd",
+		"lbConfigBase": "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName'))]",
+		"lbFrontendIPConfigId": "[concat(variables('lbConfigBase'), '/frontendIPConfigurations/', variables('lbFrontEndName'))]",
+		"lbBackendAddressPoolConfigId": "[concat(variables('lbConfigBase'), '/backendAddressPools/', variables('lbBackendAddressPoolName'))]",
+		"lbRuleProbePortConfigIdBase": "[concat(variables('lbConfigBase'), '/probes/')]",
+		"vmDiagnosticsStorageAccountUri": "[concat('https://', variables('prodVMDiagnosticsStorageAccountName'), '.blob.core.windows.net/')]",
+		"vmOSImageReferenceId": "[concat(variables('subscriptionBaseString'), '/Providers/Microsoft.Compute/Locations/', parameters('location') ,'/Publishers/MicrosoftWindowsServer/ArtifactTypes/VMImage/Offers/WindowsServer/Skus/2012-R2-Datacenter/Versions/latest')]"
+	},
+  "resources": [
+    {
+      "comments": "Availability set using managed disks and VMs specified",
+      "apiVersion": "2016-04-30-preview",
+      "type": "Microsoft.Compute/availabilitySets",
+      "sku": {
+        "name": "Aligned"
+      },
+      "name": "[parameters('vmAvailabilitySetName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3,
+        "virtualMachines": [
+          {
+            "id": "[resourceId('Microsoft.Compute/virtualMachines', variables('vm01Name'))]"
+          },
+          {
+            "id": "[resourceId('Microsoft.Compute/virtualMachines', variables('vm02Name'))]"
+          }
+        ]
+      },
+      "tags": {
+        "FullName": "Virtual Machine Availability Set in South Central US for X Subscription",
+        "Description": "Baseline VM Availability Set for the X environment",
+        "POC1": "John Doe",
+        "POC2": "The A-Team"
+      }
+    },
+    {
+      "comments": "Storage account for VM diagnostics",
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "[variables('diskRedundantStorageType')]",
+        "tier": "[variables('diskPricingTier')]"
+      },
+      "kind": "Storage",
+      "name": "[variables('prodVMDiagnosticsStorageAccountName')]",
+      "apiVersion": "2016-01-01",
+      "location": "[parameters('location')]",
+      "tags": {},
+      "properties": {},
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('mainLBPublicIPAddressesName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "idleTimeoutInMinutes": 4
+      },
+      "dependsOn": []
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[parameters('loadBalancerName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "FullName": "Load Balancer for X in South Central US for X Subscription",
+        "Description": "Baseline Load Balancer for X environment that has port 80 and 443 rules",
+        "POC1": "John Doe",
+        "POC2": "The A-Team"
+      },
+      "dependsOn": [],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('mainLBPublicIPAddressesName'))]"
+              }
+
+            },
+            "name": "[variables('lbFrontEndName')]"
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('lbBackendAddressPoolName')]"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('lbFrontendIPConfigId')]"
+              },
+              "backendAddressPool": {
+                "id": "[variables('lbBackendAddressPoolConfigId')]"
+              },
+              "probe": {
+                "id": "[concat(variables('lbRuleProbePortConfigIdBase'), variables('lbProbeName'))]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 80,
+              "backendPort": 80,
+              "idleTimeoutInMinutes": 15
+            },
+            "Name": "lbrule"
+          },
+          {
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('lbFrontendIPConfigId')]"
+              },
+              "backendAddressPool": {
+                "id": "[variables('lbBackendAddressPoolConfigId')]"
+              },
+              "probe": {
+                "id": "[concat(variables('lbRuleProbePortConfigIdBase'), variables('lbProbeSslName'))]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 443,
+              "backendPort": 443,
+              "idleTimeoutInMinutes": 15
+            },
+            "Name": "lbrule_ssl"
+          }
+        ],
+        "probes": [
+          {
+            "properties": {
+              "protocol": "Tcp",
+              "port": 80,
+              "intervalInSeconds": 15,
+              "numberOfProbes": 2
+            },
+            "name": "[variables('lbProbeName')]"
+          },
+          {
+            "properties": {
+              "protocol": "Tcp",
+              "port": 443,
+              "intervalInSeconds": 15,
+              "numberOfProbes": 2
+            },
+            "name": "[variables('lbProbeSslName')]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('networkSecurityGroupName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-rdp",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('vm01NICName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/loadBalancers/', parameters('loadBalancerName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[variables('lbBackendAddressPoolConfigId')]"
+                }
+              ]
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [
+            "[variables('dnsServer1')]"
+          ]
+        },
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName') )]"
+        }
+      }
+    },
+	{
+		"type": "Microsoft.Compute/disks",
+		"name": "[variables('vm01DiskName')]",
+		"apiVersion": "2016-04-30-preview",
+		"location": "[parameters('location')]",
+		"tags": {
+			"FullName": "Virtual Machine in North Central US for X Subscription",
+			"Description": "Baseline Virtual Network for the X environment",
+			"POC1": "John Doe",
+			"POC2": "The A-Team"
+		},
+		"properties": {
+			"accountType": "[variables('diskRedundantStorageType')]",
+			"osType": "Windows",
+			"creationData": {
+				"createOption": "FromImage",
+				"imageReference": {
+					"id": "[variables('vmOSImageReferenceId')]"
+				}
+			},
+			"diskSizeGB": 128
+		},
+		"dependsOn": []
+	},
+    {
+      "comments": "VM uses Managed disks",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vm01Name')]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[parameters('location')]",
+      "tags": {
+        "FullName": "Virtual Machine in North Central US for X Subscription",
+        "Description": "Baseline Virtual Network for the X environment",
+        "POC1": "John Doe",
+        "POC2": "The A-Team",
+        "ReservedBy": "Available",
+		"ReservedStartDate":  "Available"      
+	  },
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('vmAvailabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2012-R2-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "name": "[variables('vm01DiskName')]",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+			"managedDisk": { }
+          },
+          "dataDisks": [ ]
+        },
+        "osProfile": {
+          "computerName": "[variables('vm01Name')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('vm01NICName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[variables('vmDiagnosticsStorageAccountUri')]"
+          }
+        }
+      },
+      "resources": [],
+		"dependsOn": [
+			"[resourceId('Microsoft.Compute/availabilitySets', parameters('vmAvailabilitySetName'))]",
+			"[resourceId('Microsoft.Compute/disks', variables('vm01DiskName'))]",
+			"[resourceId('Microsoft.Network/networkInterfaces', variables('vm01NICName'))]"
+		]
+    },
+	{
+		"type": "Microsoft.Compute/disks",
+		"name": "[variables('vm02DiskName')]",
+		"apiVersion": "2016-04-30-preview",
+		"location": "[parameters('location')]",
+		"tags": {
+			"FullName": "Virtual Machine in North Central US for X Subscription",
+			"Description": "Baseline Virtual Network for the X environment",
+			"POC1": "John Doe",
+			"POC2": "The A-Team"
+		},
+		"scale": null,
+		"properties": {
+			"accountType": "[variables('diskRedundantStorageType')]",
+			"osType": "Windows",
+			"creationData": {
+				"createOption": "FromImage",
+				"imageReference": {
+					"id": "[variables('vmOSImageReferenceId')]"
+				}
+			},
+			"diskSizeGB": 128
+		},
+		"dependsOn": []
+	},
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('vm02NICName')]",
+      "location": "[parameters('location')]",
+					"dependsOn": [
+						"[concat('Microsoft.Network/loadBalancers/', parameters('loadBalancerName'))]",
+						"[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+					],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[variables('lbBackendAddressPoolConfigId')]"
+                }
+              ]
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [
+            "[variables('dnsServer1')]"
+          ]
+        },
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName') )]"
+        }
+      }
+    },
+    {
+      "comments": "VM uses Managed disks",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vm02Name')]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[parameters('location')]",
+      "tags": {
+        "FullName": "Virtual Machine in North Central US for X Subscription",
+        "Description": "Baseline Virtual Network for the X environment",
+        "POC1": "John Doe",
+        "POC2": "The A-Team",
+        "ReservedBy": "Available",
+		"ReservedStartDate":  "Available"  
+      },
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('vmAvailabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2012-R2-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "name": "[variables('vm02DiskName')]",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+			"managedDisk": { }
+          },
+          "dataDisks": [ ]
+        },
+        "osProfile": {
+          "computerName": "[variables('vm02Name')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('vm02NICName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[variables('vmDiagnosticsStorageAccountUri')]"
+          }
+        }
+      },
+      "resources": [],
+		"dependsOn": [
+			"[resourceId('Microsoft.Compute/availabilitySets', parameters('vmAvailabilitySetName'))]",
+			"[resourceId('Microsoft.Compute/disks', variables('vm02DiskName'))]",
+			"[resourceId('Microsoft.Network/networkInterfaces', variables('vm02NICName'))]"
+		]
+    }
+  ]
+}
