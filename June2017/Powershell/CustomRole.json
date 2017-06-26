@@ -1,0 +1,20 @@
+{
+  "Name": "Custom - Limited VM Lab Operator",
+  "IsCustom": true,
+  "Description": "Can monitor and restart virtual machines.",
+  "Actions": [
+	"Microsoft.Compute/virtualMachines/read",
+	"Microsoft.Compute/virtualMachines/write",
+    "Microsoft.Compute/virtualMachines/start/action",
+	"Microsoft.Compute/virtualMachines/deallocate/action",
+    "Microsoft.Compute/virtualMachines/restart/action",
+	"Microsoft.Compute/virtualMachines/instanceView/read",
+	"Microsoft.Network/networkInterfaces/join/action"
+  ],
+  "NotActions": [
+
+  ],
+  "AssignableScopes": [
+    "/subscriptions/YourSubscriptioIdHere/resourceGroups/YourResourceGroupNameHere"
+  ]
+}
