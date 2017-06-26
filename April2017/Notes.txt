@@ -1,0 +1,19 @@
+Peter,
+
+Here’s the slides for the User’s Group. Feel free to tweak them as you like especially the what’s new section. I added a few but you will probably want to add more or remove some of the ones I added. Lots happened in late March on the Azure blog.
+
+Feel free to introduce yourself at the beginning and you can mention that I had a family event he had to attend to. 
+
+I added a note about Open EDX in the What’s new section to see if we can pre-empt the guy in the back who knows of a class for every azure subject ever heard of and they all seem to be on Open EDX :0)
+
+Towards the end of the slides I have a slide for introducing Dallen. 
+
+You can say something like:
+This is Dallen Campbell. He’s the Vice President of Service Delivery for Uncommon Solutions . Uncommon Solutions started the Mile High Azure User’s Group and has been a huge supporter of the group ever since. Dallen is going to start helping Nathan and myself lead the group and meetings and he wanted to chat with everyone and ask a few questions. 
+
+Thanks for covering for me!
+
+
+
+
+**** NOTE: Microsoft provided catering. A big thank you ****
