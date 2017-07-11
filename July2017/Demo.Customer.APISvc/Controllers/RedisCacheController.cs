@@ -32,7 +32,7 @@ namespace Demo.Customer.APISvc.Controllers
 		/// <returns></returns>
 		[HttpGet()]
 		[Route("api/RedisCache/Get/{cacheKey}")]
-		[SwaggerOperation("GetCache")]
+		[SwaggerOperation("Get Cache Value")]
 		[SwaggerResponse(HttpStatusCode.OK, "Cache Item", typeof(string))]
 		[SwaggerResponseExample(HttpStatusCode.OK, typeof(string))]
 		[SwaggerResponse(HttpStatusCode.NotFound, "No Cache found", typeof(Nullable))]
@@ -84,7 +84,7 @@ namespace Demo.Customer.APISvc.Controllers
 		/// <param name="cacheValue"></param>
 		[HttpPost()]
 		[Route("api/RedisCache/Cache/{cacheKey}")]
-		[SwaggerOperation("SetCache")]
+		[SwaggerOperation("Set Cache Value")]
 		[SwaggerResponse(HttpStatusCode.Accepted, "Cached Request", typeof(string))]
 		[SwaggerResponseExample(HttpStatusCode.Accepted, typeof(string))]
 		[SwaggerResponse(HttpStatusCode.InternalServerError, "Cache Item Exception", typeof(Nullable))]
@@ -119,7 +119,7 @@ namespace Demo.Customer.APISvc.Controllers
 		  
 		[HttpDelete]
 		[Route("api/RedisCache/PurgeCache")]
-		[SwaggerOperation("PurgeCache")]
+		[SwaggerOperation("Purge Cache")]
 		[SwaggerResponse(HttpStatusCode.NotImplemented)]
 		public IHttpActionResult PurgeCache()
 		{

@@ -57,7 +57,7 @@ namespace Demo.Customer.APISvc.Controllers
 		/// </summary>
 		/// <returns></returns>
 		[Route(template: "api/Customer/Get")]
-		[SwaggerOperation("GetAll?useRedisCache={useRedisCache}")]
+		[SwaggerOperation("Get All Customers")]
 		[SwaggerResponse(HttpStatusCode.OK, "Get All Customers", typeof(List<CustomerModel>))]
 		[SwaggerResponseExample(HttpStatusCode.OK, typeof(List<CustomerModel>))]
 		[SwaggerResponse(HttpStatusCode.InternalServerError, "Get All Customers Exception", typeof(string))]
@@ -115,7 +115,7 @@ namespace Demo.Customer.APISvc.Controllers
 		/// <seealso cref="https://docs.microsoft.com/en-us/aspnet/web-api/overview/getting-started-with-aspnet-web-api/action-results" />
 		/// <seealso cref="https://docs.microsoft.com/en-us/aspnet/web-api/overview/error-handling/exception-handling"/>
 		[Route("api/Customer/Get/{id}")]
-		[SwaggerOperation("GetById/{id}?useRedisCache={useRedisCache}")]
+		[SwaggerOperation("Get Customer By Id")]
 		[SwaggerResponse(HttpStatusCode.OK, "Get Customer By Id", typeof(CustomerModel))]
 		[SwaggerResponseExample(HttpStatusCode.OK, typeof(CustomerModel))]
 		[SwaggerResponseExample(HttpStatusCode.NotFound, typeof(string))]
@@ -188,7 +188,7 @@ namespace Demo.Customer.APISvc.Controllers
 		/// <returns></returns>
 		[HttpGet()]
 		[Route("api/Customer/CustomerCache")]
-		[SwaggerOperation("CustomerRedisCache")]
+		[SwaggerOperation("Customer Redis Cache")]
 		[SwaggerResponse(HttpStatusCode.OK, "Customer Redis Cache", typeof(List<CustomerModel>))]
 		[SwaggerResponseExample(HttpStatusCode.OK, typeof(List<CustomerModel>))]
 		[SwaggerResponse(HttpStatusCode.InternalServerError, "Customer Redis Cache Exception", typeof(string))]
@@ -258,6 +258,7 @@ namespace Demo.Customer.APISvc.Controllers
 		}
 
 		// DELETE api/<controller>/5
+		[SwaggerOperation("Delete Customer by Id")]
 		[SwaggerResponseExample(HttpStatusCode.NotImplemented, typeof(NotImplementedException))]
 		public IHttpActionResult Delete(int id)
 		{
