@@ -1,1 +1,16 @@
-x
+** Open GitHub API Mgmt DevOps Toolkit URL:
+	https://github.com/Azure/azure-api-management-devops-resource-kit/blob/master/README.md
+
+  https://github.com/Azure/azure-api-management-devops-resource-kit/blob/master/src/APIM_ARMTemplate/README.md#Creator
+	
+		The "Creator" to build ARM templates from a Swagger file pushed to an API App instance
+			Open the "testAPIconfig-v0.4-delta.yml" and show the name, outputLocation, etc.
+
+		The "Extractor" to build ARM templates from an already provisioned API Mgmt instance
+
+	The examples available on GitHub repo:
+		https://github.com/Azure/azure-api-management-devops-resource-kit/tree/master/example
+
+* DevOps Toolkit Releases:
+	Creator and Extractor binary
+	https://github.com/Azure/azure-api-management-devops-resource-kit/releases
