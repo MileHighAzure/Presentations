@@ -1,3 +1,5 @@
+API source code used for demoing customer data, can be found here: https://github.com/MileHighAzure/Presentations/tree/master/July2017
+
 ** Open GitHub API Mgmt DevOps Toolkit URL:
 	https://github.com/Azure/azure-api-management-devops-resource-kit/blob/master/README.md
 
