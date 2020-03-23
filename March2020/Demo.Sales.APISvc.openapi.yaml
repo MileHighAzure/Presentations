@@ -1,0 +1,78 @@
+openapi: 3.0.1
+info:
+  title: Demo.Sales.APISvc
+  description: Demo.Sales.APISvc - temporarily using "Mocked Data"
+  version: '1.0'
+servers:
+  - url: https://coresampledemo-dev-cus-apim.azure-api.net/demo-apis/api/sales
+paths:
+  /salesdata:
+    get:
+      summary: TestMock
+      description: Mock the sales data - https://docs.microsoft.com/en-us/azure/api-management/mock-api-responses
+      operationId: testmock
+      responses:
+        '200':
+          description: sales data
+          headers:
+            x-IsMocked-Data:
+              description: Is Mock Data
+              schema:
+                enum:
+                  - 'True'
+                type: Bool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/salesHeader'
+              example:
+                customerId: 1234
+                orderId: 1234
+                salesQty: 12
+                salesAmount: 1234.5
+                taxExempt: true
+  /salesdataratelimit:
+    get:
+      summary: TestMockWithRateLimit
+      description: "Mock the sales data with Rate Limit\nhttps://docs.microsoft.com/en-us/azure/api-management/mock-api-responses\nhttps://docs.microsoft.com/en-us/azure/api-management/api-management-access-restriction-policies"
+      operationId: testmockwithratelimit
+      responses:
+        '200':
+          description: sales data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/salesHeader'
+              example:
+                customerId: 1234
+                orderId: 1234
+                salesQty: 12
+                salesAmount: 1234.5
+                taxExempt: true
+components:
+  schemas:
+    salesHeader:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        orderId:
+          type: integer
+        salesQty:
+          type: integer
+        salesAmount:
+          type: number
+        taxExempt:
+          type: boolean
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]
