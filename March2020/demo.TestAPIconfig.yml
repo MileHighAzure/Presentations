@@ -1,0 +1,12 @@
+﻿version: 0.0.1 # Required
+apimServiceName: CoreSampleDemo-Dev-CUS-APIM # Required, must match name of an apim service deployed in the specified resource group
+apis:
+ - name: APIMDevOpsTest
+   type: http
+   description: APIMDevOpsTest
+   serviceUrl: http://yourazurewebapp.azurewebsites.net/
+   openApiSpec: http://yourazurewebapp.azurewebsites.net/swagger/docs/v1
+   suffix: APIMDevOpsTest
+   subscriptionRequired: true
+   isCurrent: true
+outputLocation: C:\AppDev\APIMgmt-pepiper-demo-ARM\CoreSampleDemo-Dev-CUS-ARM-Templates # Required, folder the creator will write the templates to
