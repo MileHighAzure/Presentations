@@ -16,3 +16,10 @@ API source code used for demoing customer data, can be found here: https://githu
 * DevOps Toolkit Releases:
 	Creator and Extractor binary
 	https://github.com/Azure/azure-api-management-devops-resource-kit/releases
+
+
+##############################################################################################################
+
+Recorded meeting session can be found here - https://5280azuremeetupgrpsa.blob.core.windows.net/mediacontent/Denver%20MTC%20-%20Mile%20High%20Azure%20User%20Group-RecordedSession.zip
+
+##############################################################################################################
